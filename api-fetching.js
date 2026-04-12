@@ -1,16 +1,3 @@
-/*
-let x = fetch("https://pokeapi.co/api/v2/pokemon/35")
-    .then(result => {return result.json()})
-    .then(object => {console.log(object)}) //this just prints what the object has
-*/
-
-/* an pokemon object has the attributes
-pokemon.abilites[0...x] -> for abilities
-forms.sprites[0].front_default -> for pictures of pokemon
-pokemon.forms[0].name
-pokemon.forms[0].url
-
-*/
 let pokes = [];
 
 async function fetchPokes() {
@@ -32,8 +19,22 @@ async function fetchPokes() {
 
 async function doIt() {
     await fetchPokes();
-    await console.log(pokes);
+    console.log(pokes);
+    showPokes(pokes)
+}
+
+function showPokes(pokesArr) {
+    pokesArr.forEach(poke => {
+        document.getElementById('view').innerHTML += `
+        <table>
+            <tr>
+                <td> ${poke.name} </td>
+                <td><img src = '${poke.picture}'> </td>
+            </tr>
+        
+        </table>`})
+
+    
 }
 
 doIt();
-
