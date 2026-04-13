@@ -1,32 +1,7 @@
-/*
-let x = fetch("https://pokeapi.co/api/v2/pokemon/35")
-    .then(result => {return result.json()})
-    .then(object => {console.log(object)}) //this just prints what the object has
-*/
-
-/* an pokemon object has the attributes
-pokemonObj.abilites[0...x] -> for abilities
-formsObj.sprites[0].front_default -> for pictures of pokemon
-pokemonObj.forms[0].name -> name of pokemon
-pokemonObj.forms[0].url -> for use in fetching the sprite
-abilityObj.effect_entries[2].effect -> english version of the effect of an ability
-
-pokes.push({
-            pokemon: pokeObj,
-            name: pokeObj.name,
-            sprite: formObj.sprites.front_default,
-            abilities: pokeObj.abilities
-        })
-
-*/
-let pokemon = {};
 let pokesArr = [];
 
-
 async function fetchPokes() {
-    let effectEntryEn;
-
-    for (let i = 1; i <= 1; i++) { //we will do api calls to five pokemons
+    for (let i = 1; i <= 5; i++) { //we will do api calls to five pokemons
         let pokeObj = await fetch(`https://pokeapi.co/api/v2/pokemon/${i}`).then(result => { return result.json() })
         
     
@@ -41,9 +16,9 @@ async function fetchPokes() {
         for (let abilities of pokeObj.abilities) {
             let resObj = await fetch(abilities.ability.url).then(res => { return res.json() })
             ability_entries.push({
-                abilityName: resObj.name,
-                abilityEffect: resObj.effect_entries[2].effect,
-                abilityShortEffect: resObj.effect_entries[2].short_effect
+                name: resObj.name,
+                effect: resObj.effect_entries[2].effect,
+                shortEffect: resObj.effect_entries[2].short_effect
             })
         }
 
@@ -51,7 +26,7 @@ async function fetchPokes() {
         type_entries = []
         for (let types of pokeObj.types) {
             let resObj = await fetch(types.type.url).then(res => { return res.json() })
-            console.log(resObj.sprites['generation-iii'].colosseum.name_icon)
+            //console.log(resObj.sprites['generation-iii'].colosseum.name_icon)
             
             type_entries.push({
                 name: types.type.name,
@@ -70,30 +45,26 @@ async function fetchPokes() {
         })
 
     }
-    
-    
-
-    
-    
 }
 
 async function doIt() {
     await fetchPokes();
     console.log(pokesArr[0].typeEntries);
-    //await showPokes(pokes);
-   
+    showPokes(pokesArr)
 }
 
-async function showPokes(pokesArr) {
+function showPokes(pokesArr) {
+    let pokeView = '<table>'
     pokesArr.forEach(poke => {
-        console.log(poke.name)
-        console.log(poke.picture)
-        poke.abilities.forEach(abilityObj => {
-            let ability = abilityObj
-            console.log(ability)
-        })
-    })
+        document.getElementById('view').innerHTML += `
+        <table>
+            <tr>
+                <td> ${poke.name} </td>
+                <td><img src = '${poke.sprite}'> </td>
+            </tr>
+        </table>`})
+
+    
 }
 
-doIt()
-
+doIt();
