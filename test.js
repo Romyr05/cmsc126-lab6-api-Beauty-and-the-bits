@@ -1,5 +1,5 @@
 const BASE = 'https://pokeapi.co/api/v2';
-const POKEMON_LIMIT = 20;
+const POKEMON_LIMIT = 20;   //Number of pokemon
 
 const grid = document.getElementById('grid');
 const searchInput = document.getElementById('search');
@@ -266,7 +266,7 @@ async function init() {
   //Fetching pokemon
   try {
 
-    allPokemon = await Promise.all(ids.map(fetchPokemon));
+    allPokemon = await Promise.all(ids.map(fetchPokemon));  //Gets all the ids then fetch them
     filteredPokemon = allPokemon;
     renderCards(filteredPokemon);
     updateSummary();
