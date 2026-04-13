@@ -1,172 +1,295 @@
-
-/* ─── StatColor ────────────────────────────────────────────────────── */
-function statColor(name) {
-  const map = {
-    hp: '#e74c3c',
-    attack: '#d85a30',
-    defense: '#185fa5',
-    'special-attack': '#534ab7',
-    'special-defense': '#0f6e56',
-    speed: '#1d9e75',
-  };
-  return map[name] || '#888';
-}
-/* ─── API Helper/Builder ──────────────────────────────────────────────── */
 const BASE = 'https://pokeapi.co/api/v2';
+const POKEMON_LIMIT = 20;
 
-async function fetchJSON(url) {
-const res = await fetch(url);
-if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
-return res.json();
-}
-
-async function fetchPokemon(id) {
-return fetchJSON(`${BASE}/pokemon/${id}`);
-}
-
-/* ─── State ────────────────────────────────────────────────────── */
-let allPokemon = [];
-let filtered = [];
-
-/* ─── Render Cards ─────────────────────────────────────────────── */
-function renderCards(list) {
 const grid = document.getElementById('grid');
-
-if (!list.length) {
-  grid.innerHTML = '<div id="empty">No Pokémon found. Try a different name.</div>';
-  return;
-}
-
-grid.innerHTML = list
-  .map((p) => {
-    const typesBadges = p.types
-      .map(
-        (t) =>
-          `<span class="type-badge">${t.type.name}</span>`
-      )
-      .join('');
-
-    return `
-      <div class="card" onclick="openModal(${p.id})">
-        <img src="${p.sprites.front_default}" alt="${p.name}" loading="lazy" />
-        <span class="poke-id">#${String(p.id).padStart(3, '0')}</span>
-        <span class="poke-name">${p.name}</span>
-        <div class="types">${typesBadges}</div>
-      </div>
-    `;
-  })
-  .join('');
-}
-
-/* ─── Open Modal ───────────────────────────────────────────────── */
-async function openModal(id) {
-const p = allPokemon.find((x) => x.id === id);
-if (!p) return;
-
-// Show modal with loading state
+const searchInput = document.getElementById('search');
 const modalBg = document.getElementById('modal-bg');
 const modalBody = document.getElementById('modal-body');
-modalBg.classList.remove('hidden');
-modalBody.innerHTML = `
-  <div class="loading">
-    <div class="spinner"></div>
-    <span>Loading details…</span>
-  </div>
-`;
+const modalCloseBtn = document.getElementById('modal-close');
+const loadedCount = document.getElementById('loaded-count');
+const visibleCount = document.getElementById('visible-count');
+const queryStatus = document.getElementById('query-status');
 
-try {
-  // Type badges
-  const typesBadges = p.types
-    .map(
-      (t) =>
-         `<span class="type-badge">${t.type.name}</span>`
-    )
+let allPokemon = [];
+let filteredPokemon = [];
+let lastFocusedCard = null;
+
+function statColor(name) {
+  const map = {
+    hp: '#d95f4f',
+    attack: '#c57a28',
+    defense: '#4476c2',
+    'special-attack': '#8d56c6',
+    'special-defense': '#2d8c73',
+    speed: '#dbbf47',
+  };
+
+  return map[name] || '#6d765e';
+}
+
+//Removes every symbols and make it Capital
+function titleCase(text) {
+  return text
+    .split(/[-\s]+/)
+    .filter(Boolean)   //Removes all falsy
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))  //Capitalizes it
+    .join(' ');
+}
+
+//Pokemon number
+function formatPokemonNumber(id) {
+  return `#${String(id).padStart(3, '0')}`;
+}
+
+//Sprite
+function getPokemonSprite(pokemon) {
+  return (
+    pokemon.sprites.other?.['official-artwork']?.front_default ||
+    pokemon.sprites.front_default ||
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'
+  );
+}
+
+//Basically the type
+function renderTypeBadges(types) {
+  return types
+    .map((entry) => `<span class="type-badge">${titleCase(entry.type.name)}</span>`)
     .join('');
+}
 
-  // Stats
-  const statsHtml = p.stats
-    .map((s) => {
-      const pct = Math.min(100, Math.round((s.base_stat / 255) * 100));
+function renderStats(stats) {
+  return stats
+    .map((entry) => {
+      const statColorBar = Math.min(100, Math.round((entry.base_stat / 255) * 100));
+
       return `
         <div class="stat-row">
-          <span class="stat-name">${s.stat.name}</span>
+          <span class="stat-name">${titleCase(entry.stat.name)}</span>
           <div class="stat-bar-bg">
-            <div class="stat-bar" style="width:${pct}%;background:${statColor(s.stat.name)}"></div>
+            <div
+              class="stat-bar"
+              style="width:${statColorBar}%; background:${statColor(entry.stat.name)}"   //The bar color
+            ></div>
           </div>
-          <span class="stat-val">${s.base_stat}</span>
+          <span class="stat-val">${entry.base_stat}</span>
         </div>
       `;
     })
     .join('');
+}
 
-  // Moves (first 12)
-  const movesHtml = p.moves
-    .slice(0, 12)
-    .map((m) => `<span class="move-badge">${m.move.name}</span>`)
+//Moveset just renders it 
+function renderMoves(moves) {
+  const selectedMoves = moves.slice(0, 12);
+
+  if (!selectedMoves.length) {
+    return '<p class="empty-copy">No move data available.</p>';
+  }
+
+  return selectedMoves
+    .map((entry) => `<span class="move-badge">${titleCase(entry.move.name)}</span>`)
     .join('');
+}
 
- 
+//Loading image
+function renderLoading(message) {
+  grid.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>${message}</span>
+    </div>
+  `;
+}
 
-  // Render full modal
+// Message if no pokemon
+function renderEmpty(message) {
+  grid.innerHTML = `<div id="empty">${message}</div>`;
+}
+
+function updateSummary(query = '') {
+  loadedCount.textContent = String(allPokemon.length);
+  visibleCount.textContent = String(filteredPokemon.length);
+  queryStatus.textContent = query ? titleCase(query) : 'All';
+}
+
+function renderCards(list) {
+  if (!list.length) {
+    renderEmpty('No Pokémon matched that search. Try another name from the first 20.');
+    return;
+  }
+
+  grid.innerHTML = list
+    .map((pokemon) => {
+      const sprite = getPokemonSprite(pokemon);
+
+      return `
+        <button
+          class="card"
+          type="button"
+          data-pokemon-id="${pokemon.id}"
+          aria-label="Open details for ${titleCase(pokemon.name)}"
+        >
+          <div class="sprite-frame">
+            <img src="${sprite}" alt="${titleCase(pokemon.name)}" loading="lazy" />
+          </div>
+          <span class="poke-id">${formatPokemonNumber(pokemon.id)}</span>
+          <span class="poke-name">${titleCase(pokemon.name)}</span>
+          <div class="types">${renderTypeBadges(pokemon.types)}</div>
+        </button>
+      `;
+    })
+    .join('');
+}
+
+//Filtered pokemon 
+function setFilteredPokemon(query) {
+  const normalizedQuery = query.toLowerCase().trim();    
+  filteredPokemon = normalizedQuery
+    ? allPokemon.filter((pokemon) => pokemon.name.toLowerCase().includes(normalizedQuery)) //filtered
+    : allPokemon;   //show all 
+
+  updateSummary(normalizedQuery);
+  renderCards(filteredPokemon);
+}
+
+//Fetching
+async function fetchJSON(url) {
+  const response = await fetch(url);
+
+  //No response API
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${url}`);
+  }
+
+  return response.json();
+}
+
+
+//Fetching the pokemons id based on API
+function fetchPokemon(id) {
+  return fetchJSON(`${BASE}/pokemon/${id}`);
+}
+
+
+//Basically the modal when clicked
+function openModal(id, triggerElement = null) {
+  const pokemon = allPokemon.find((entry) => entry.id === id);
+
+  if (!pokemon) {
+    return;
+  }
+
+  lastFocusedCard = triggerElement || document.activeElement;
+  modalBg.classList.remove('hidden');
+  modalBg.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+
+  const sprite = getPokemonSprite(pokemon);
+  const statsHtml = renderStats(pokemon.stats);
+  const movesHtml = renderMoves(pokemon.moves);
+  const typesHtml = renderTypeBadges(pokemon.types);
+
   modalBody.innerHTML = `
     <div class="modal-hero">
-      <img src="${p.sprites.front_default}" alt="${p.name}" />
-      <h2>${p.name}</h2>
-      <p class="modal-meta">
-        #${String(p.id).padStart(3, '0')}
-        &nbsp;·&nbsp; ${p.types.map((t) => t.type.name).join(' / ')}
-        &nbsp;·&nbsp; ${(p.weight / 10).toFixed(1)} kg
-        &nbsp;·&nbsp; ${(p.height / 10).toFixed(1)} m
-      </p>
-      <div class="modal-types">${typesBadges}</div>
+      <div class="modal-sprite-frame">
+        <img src="${sprite}" alt="${titleCase(pokemon.name)}" />
+      </div>
+      <div>
+        <h2 id="modal-title">${titleCase(pokemon.name)}</h2>
+        <p class="modal-meta">
+          ${formatPokemonNumber(pokemon.id)} · ${pokemon.types
+            .map((entry) => titleCase(entry.type.name))
+            .join(' / ')}
+        </p>
+        <div class="modal-types">${typesHtml}</div>
+        <div class="modal-quickstats">
+          <span class="quickstat">Height ${pokemon.height / 10} m</span>
+          <span class="quickstat">Weight ${(pokemon.weight / 10).toFixed(1)} kg</span>
+          <span class="quickstat">Moves ${pokemon.moves.length}</span>
+        </div>
+      </div>
     </div>
 
-    <div class="section-label">Base stats</div>
-    ${statsHtml}
+    <div class="section-label">Base Stats</div>
+    <section class="stats-panel">${statsHtml}</section>
 
-
-    <div class="section-label">Moves (first 12)</div>
-    <div class="moves-grid">${movesHtml}</div>
+    <div class="section-label">Move Set Preview</div>
+    <section class="moves-panel">
+      <div class="moves-grid">${movesHtml}</div>
+    </section>
   `;
-} catch (err) {
-  modalBody.innerHTML = `<p>Failed to load details.</p>`;
-  console.error(err);
-}
+
+  modalCloseBtn.focus();
 }
 
-/* ─── Close Modal ──────────────────────────────────────────────── */
+//Close modal
 function closeModal() {
-document.getElementById('modal-bg').classList.add('hidden');
+  if (modalBg.classList.contains('hidden')) {
+    return;
+  }
+
+  modalBg.classList.add('hidden');
+  modalBg.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+
+  if (lastFocusedCard instanceof HTMLElement) {
+    lastFocusedCard.focus();
+  }
 }
 
-function handleModalBgClick(e) {
-if (e.target === document.getElementById('modal-bg')) {
-  closeModal();
-}
+function handleGridInteraction(event) {
+  const card = event.target.closest('.card'); // Does this so that we will not attach 
+                                            // The addEventListener to every card
+
+  if (!card) {
+    return;
+  }
+
+  openModal(Number(card.dataset.pokemonId), card);
 }
 
-/* ─── Search ───────────────────────────────────────────────────── */
-document.getElementById('search').addEventListener('input', function () {
-const query = this.value.toLowerCase().trim();
-filtered = query
-  ? allPokemon.filter((p) => p.name.toLowerCase().includes(query))
-  : allPokemon;
-renderCards(filtered);
+
+//press Esc to exit
+function handleDocumentKeydown(event) {
+  if (event.key === 'Escape' && !modalBg.classList.contains('hidden')) {
+    closeModal();
+  }
+}
+
+
+// Main function
+async function init() {
+  renderLoading('Loading Pokémon…');   //Loading image if no api
+
+  const ids = Array.from({ length: POKEMON_LIMIT }, (_, index) => index + 1);
+
+  //Fetching pokemon
+  try {
+
+    allPokemon = await Promise.all(ids.map(fetchPokemon));
+    filteredPokemon = allPokemon;
+    renderCards(filteredPokemon);
+    updateSummary();
+
+  } catch (error) {
+    renderEmpty('Failed to load Pokémon. Please refresh the page and try again.');
+    updateSummary();
+    console.error(error);
+  }
+}
+
+//Filter
+searchInput.addEventListener('input', (event) => {
+  setFilteredPokemon(event.target.value);
 });
 
-/* ─── Init ─────────────────────────────────────────────────────── */
-(async function init() {
-const ids = Array.from({ length: 20 }, (_, i) => i + 1);
+grid.addEventListener('click', handleGridInteraction);
+modalCloseBtn.addEventListener('click', closeModal);
+modalBg.addEventListener('click', (event) => {
+  if (event.target === modalBg) {
+    closeModal();
+  }
+});
+document.addEventListener('keydown', handleDocumentKeydown);
 
-try {
-  // Fetch all 20 Pokémon in parallel
-  allPokemon = await Promise.all(ids.map(fetchPokemon));
-  filtered = allPokemon;
-  renderCards(allPokemon);
-} catch (err) {
-  document.getElementById('grid').innerHTML =
-    '<div id="empty">Failed to load Pokémon. zzZZ</div>';
-  console.error(err);
-}
-})();
-
+init();

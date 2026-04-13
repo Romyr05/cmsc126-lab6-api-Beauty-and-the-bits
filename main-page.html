@@ -4,57 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokédex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="main-page.css" />
 </head>
 <body>
-
-  <article>
-
-    <header>
-      <div class="header-inner">
-        <h1>Pokédex</h1>
-        <p class="subtitle">Browse 20 Pokémon</p>
-      </div>
-    </header>
-
-    <main>  
-
-      <section class="search-wrap">
-        <input type="text" id="search" placeholder="Search Pokémon by name…" autocomplete="off" />
-      </section>
-
-      <section id="grid">
-
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>Loading Pokémon…</span>
+  <div class="screen-shell">
+    <article class="app-shell">
+      <header class="topbar">
+        <div class="header-inner">
+          <div>
+            <p class="eyebrow">Kanto Field Unit</p>
+            <h1>Pokédex</h1>
+            <p class="subtitle">Retro scanner for the first 20 Pokémon</p>
+          </div>
+          <div class="status-chip" aria-label="App mode">Online</div>
         </div>
+      </header>
 
-      </section>
-    </main>
+      <main>
+        <section class="control-panel" aria-labelledby="search-label">
+          <div class="search-heading">
+            <p class="panel-kicker">Lookup</p>
+            <h2 id="search-label">Search the roster</h2>
+            <p class="panel-copy">Filter by Pokémon name and open a card to inspect stats, size, and moves.</p>
+          </div>
 
-  </article>
+          <label class="search-input-wrap" for="search">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input
+              type="text"
+              id="search"
+              placeholder="Try pikachu, charmeleon, squirtle..."
+              autocomplete="off"
+            />
+          </label>
 
+          <section class="summary-strip" aria-label="Pokedex summary">
+            <div class="summary-card">
+              <span class="summary-label">Loaded</span>
+              <strong id="loaded-count">0</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Showing</span>
+              <strong id="visible-count">0</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Query</span>
+              <strong id="query-status">All</strong>
+            </div>
+          </section>
+        </section>
 
-  <article id="modal-bg" class="hidden" onclick="handleModalBgClick(event)">
-    <section id="modal">
+        <section id="grid" aria-live="polite">
+          <div class="loading">
+            <div class="spinner"></div>
+            <span>Loading Pokémon…</span>
+          </div>
+        </section>
+      </main>
+    </article>
+  </div>
 
-      <button id="modal-close" onclick="closeModal()">×</button>
+  <article id="modal-bg" class="hidden" aria-hidden="true">
+    <section id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button id="modal-close" type="button" aria-label="Close details">×</button>
       <div id="modal-body">
         <div class="loading">
           <div class="spinner"></div>
           <span>Loading details…</span>
         </div>
       </div>
-      
     </section>
   </article>
 
   <footer>
-  <p>
-     Pokémon data from <a href="https://pokeapi.co/">PokeAPI</a>
-    <br>CMSC 126 Lab 6: API 
-  </p>
+    <p>
+      Pokémon data from <a href="https://pokeapi.co/">PokeAPI</a>
+      <br />CMSC 126 Lab 6: API
+    </p>
   </footer>
   <script src="test.js"></script>
 </body>
