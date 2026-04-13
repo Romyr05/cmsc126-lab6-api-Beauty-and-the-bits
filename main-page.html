@@ -1,23 +1,62 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        
-    </head>
-    <body>
-        <div class = main>
-            <div id = header> //maybe a searchbar here??
-                <h2>Main Page</h2>
-            </div>
-            
-            <button>Show objects</button> //button to show the json objects collected
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokédex</title>
+  <link rel="stylesheet" href="main-page.css" />
+</head>
+<body>
 
-            <div id = view> //this is where the json object will be at
-            </div>
+  <article>
+
+    <header>
+      <div class="header-inner">
+        <h1>Pokédex</h1>
+        <p class="subtitle">Browse 20 Pokémon</p>
+      </div>
+    </header>
+
+    <main>  
+
+      <section class="search-wrap">
+        <input type="text" id="search" placeholder="Search Pokémon by name…" autocomplete="off" />
+      </section>
+
+      <section id="grid">
+
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading Pokémon…</span>
         </div>
-        
 
-    </body>
-    <footer>
-        
-    </footer>
+      </section>
+    </main>
+
+  </article>
+
+
+  <article id="modal-bg" class="hidden" onclick="handleModalBgClick(event)">
+    <section id="modal">
+
+      <button id="modal-close" onclick="closeModal()">×</button>
+      <div id="modal-body">
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading details…</span>
+        </div>
+      </div>
+      
+    </section>
+  </article>
+
+  <footer>
+  <p>
+     Pokémon data from <a href="https://pokeapi.co/">PokeAPI</a>
+    <br>CMSC 126 Lab 6: API 
+  </p>
+  </footer>
+  <script src="test.js"></script>
+</body>
+
 </html>
