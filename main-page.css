@@ -252,6 +252,7 @@ main {
   cursor: pointer;
   text-align: center;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  filter:opacity(80%);
 }
 
 .card::before {
@@ -269,6 +270,7 @@ main {
   border-color: #8a3d14;
   box-shadow: 0 12px 0 rgba(26, 30, 18, 0.2), 0 0 0 4px var(--glow);
   outline: none;
+  filter:opacity(100%);
 }
 
 .sprite-frame {
@@ -323,14 +325,35 @@ main {
   border: 2px solid var(--line);
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
-  background: rgba(248, 239, 207, 0.9);
+  background: rgba(248, 239, 207, 0.9); /*default*/
+
 }
 
 .type-badge {
   font-family: var(--pixel-font);
   font-size: 0.45rem;
   text-transform: uppercase;
+  color: black;
 }
+
+.type-normal { background-color: #A8A77A; }
+.type-fire { background-color: #EE8130; }
+.type-water { background-color: #6390F0; }
+.type-electric { background-color: #F7D02C; }
+.type-grass { background-color: #7AC74C; }
+.type-ice { background-color: #96D9D6; }
+.type-fighting { background-color: #C22E28; }
+.type-poison { background-color: #be5abd; }
+.type-ground { background-color: #E2BF65; }
+.type-flying { background-color: #A98FF3; }
+.type-psychic { background-color: #F95587; }
+.type-bug { background-color: #A6B91A; }
+.type-rock { background-color: #B6A136; }
+.type-ghost { background-color: #735797; }
+.type-dragon { background-color: #6F35FC; }
+.type-dark { background-color: #705746; }
+.type-steel { background-color: #B7B7CE; }
+.type-fairy { background-color: #D685AD; }
 
 .loading,
 #empty {
@@ -410,6 +433,7 @@ main {
 #modal-close:focus-visible {
   transform: translateY(-2px);
   outline: none;
+  filter:brightness(110%);
 }
 
 #modal-body {

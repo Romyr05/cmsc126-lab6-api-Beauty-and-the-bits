@@ -1,5 +1,5 @@
 const BASE = 'https://pokeapi.co/api/v2';
-const POKEMON_LIMIT = 20;   //Number of pokemon
+const POKEMON_LIMIT = 30;   //Number of pokemon
 
 const grid = document.getElementById('grid');
 const searchInput = document.getElementById('search');
@@ -53,7 +53,7 @@ function getPokemonSprite(pokemon) {
 //Basically the type
 function renderTypeBadges(types) {
   return types
-    .map((entry) => `<span class="type-badge">${titleCase(entry.type.name)}</span>`)
+    .map((entry) => `<span class="type-badge type-${entry.type.name}">${titleCase(entry.type.name)}</span>`)
     .join('');
 }
 
@@ -90,6 +90,7 @@ function renderMoves(moves) {
     .map((entry) => `<span class="move-badge">${titleCase(entry.move.name)}</span>`)
     .join('');
 }
+
 
 //Loading image
 function renderLoading(message) {
@@ -197,9 +198,7 @@ function openModal(id, triggerElement = null) {
       <div>
         <h2 id="modal-title">${titleCase(pokemon.name)}</h2>
         <p class="modal-meta">
-          ${formatPokemonNumber(pokemon.id)} · ${pokemon.types
-            .map((entry) => titleCase(entry.type.name))
-            .join(' / ')}
+          ${formatPokemonNumber(pokemon.id)}
         </p>
         <div class="modal-types">${typesHtml}</div>
         <div class="modal-quickstats">
